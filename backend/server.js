@@ -31,21 +31,39 @@ if (missingEnvVars.length > 0) {
 }
 
 console.log('Initializing server...');
-try {
-  console.log('Attempting to connect to MongoDB...');
-  await connectDB();
-  console.log('MongoDB connected successfully');
-  
-  console.log('Attempting to connect to Cloudinary...');
-  await connectCloudinary();
-  console.log('Cloudinary connected successfully');
-} catch (error) {
-  console.error('Error during initialization:', error);
-  // In development, exit on initialization error
-  if (process.env.NODE_ENV !== 'production') {
-    process.exit(1);
+
+// Wrap the entire initialization in a self-executing async function
+(async () => {
+  try {
+    console.log('Attempting to connect to MongoDB...');
+    await connectDB();
+    console.log('MongoDB connected successfully');
+    
+    console.log('Attempting to connect to Cloudinary...');
+    await connectCloudinary();
+    console.log('Cloudinary connected successfully');
+
+    // Start the server only after successful initialization
+    const server = app.listen(port, () => {
+      console.log("Server started on PORT:", port);
+    });
+
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM signal received: closing HTTP server');
+      server.close(() => {
+        console.log('HTTP server closed');
+      });
+    });
+
+  } catch (error) {
+    console.error('Error during initialization:', error);
+    // In production, log error but don't exit
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
-}
+})();
 // middlewares
 
 app.use(express.json());
@@ -80,11 +98,15 @@ app.get("/", (req, res) => {
 
 // Error handling
 app.use((err, req, res, next) => {
+  // Log error details
   console.error('Error occurred:', {
+    timestamp: new Date().toISOString(),
     path: req.path,
     method: req.method,
     error: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    requestBody: req.body,
+    requestQuery: req.query
   });
 
   // Handle specific error types
@@ -97,20 +119,31 @@ app.use((err, req, res, next) => {
   }
 
   if (err.name === 'MongoError' || err.name === 'MongoServerError') {
-    return res.status(500).json({
+    console.error('MongoDB Error Details:', err);
+    return res.status(503).json({
       success: false,
-      message: 'Database Error',
-      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error'
+      message: 'Database Service Unavailable',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Service temporarily unavailable'
     });
   }
 
+  if (err.name === 'ConnectionError' || err.message.includes('connection')) {
+    return res.status(503).json({
+      success: false,
+      message: 'Service Connection Error',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Service temporarily unavailable'
+    });
+  }
+
+  // Default error response
   res.status(500).json({
     success: false,
-    message: err.message || 'Internal Server Error',
+    message: 'Internal Server Error',
     error: process.env.NODE_ENV === 'development' ? {
+      name: err.name,
       message: err.message,
       stack: err.stack
-    } : {}
+    } : { message: 'An unexpected error occurred' }
   });
 });
 

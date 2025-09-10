@@ -55,6 +55,10 @@ const connectDB = async () => {
           await mongoose.connection.close();
         }
 
+        // Print connection state for debugging
+        console.log('Current connection state:', mongoose.connection.readyState);
+        console.log('Attempting connection with URI:', process.env.MONGODB_URI ? 'URI exists' : 'URI missing');
+
         await mongoose.connect(process.env.MONGODB_URI, {
           serverSelectionTimeoutMS: 30000,
           socketTimeoutMS: 60000,
