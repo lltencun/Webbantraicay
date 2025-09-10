@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.custom-carousel-img {
+  height: 400px; /* Chiều cao cố định cho hình ảnh */
+  object-fit: cover; /* Đảm bảo hình ảnh giữ đúng tỷ lệ */
+}
+.custom-caption {
+  position: absolute;
+  top: 50%; /* Căn giữa theo chiều dọc */
+  right: 5%; /* Đưa chữ sang bên phải */
+  transform: translateY(-50%); /* Đảm bảo chữ nằm chính giữa theo chiều dọc */
+  background-color: rgba(0, 0, 0, 0); /* Xóa nền mờ */
+  padding: 0; /* Xóa khoảng cách bên trong */
+  color: #fff; /* Màu chữ trắng */
+  text-align: right; /* Căn chữ sang phải */
+  max-width: 30%; /* Giới hạn chiều rộng của phần chữ */
+}
+.custom-caption h5 {
+  font-size: 2rem; /* Tăng kích thước chữ tiêu đề */
+  font-weight: bold;
+}
+.custom-caption p {
+  font-size: 1.2rem; /* Tăng kích thước chữ mô tả */
+}
+.object-fit-cover {
+  object-fit: cover;
+}
+.carousel-caption-box {
+  color: #1a1a1a; /* Màu chữ xám đậm hiện đại */
+  text-align: left;
+  padding: 40px;
+  animation: fadeInUp 1s ease;
+}
+
+.carousel-caption-box h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  line-height: 1.2;
+}
+
+.carousel-caption-box p {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #555;
+}
+
+/* Hiệu ứng chữ xuất hiện từ dưới lên */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+body, html {
+  margin: 0;
+  padding: 0;
+}
+.navbar {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+/* Responsive cho điện thoại */
+@media (max-width: 768px) {
+  .carousel-caption-box {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .carousel-caption-box h2 {
+    font-size: 1.8rem;
+  }
+
+  .carousel-caption-box p {
+    font-size: 1rem;
+  }
+}
