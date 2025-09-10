@@ -20,8 +20,15 @@ import deliveryPersonRouter from "./routes/deliveryPersonRoute.js"; // Import de
 //app config
 const app = express();
 const port = process.env.PORT || 4000;
-connectDB();
-connectCloudinary();
+console.log('Initializing server...');
+try {
+  await connectDB();
+  console.log('MongoDB connected successfully');
+  await connectCloudinary();
+  console.log('Cloudinary connected successfully');
+} catch (error) {
+  console.error('Error during initialization:', error);
+}
 // middlewares
 
 app.use(express.json());
@@ -33,6 +40,10 @@ app.use(cors({
 }));
 
 // api endpoints
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
