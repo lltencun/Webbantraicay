@@ -20,14 +20,31 @@ import deliveryPersonRouter from "./routes/deliveryPersonRoute.js"; // Import de
 //app config
 const app = express();
 const port = process.env.PORT || 4000;
+
+// Validate environment variables
+const requiredEnvVars = ['MONGODB_URI', 'CLOUDINARY_API_KEY', 'CLOUDINARY_SECRET_KEY', 'CLOUDINARY_NAME'];
+const missingEnvVars = requiredEnvVars.filter(env => !process.env[env]);
+
+if (missingEnvVars.length > 0) {
+  console.error('Missing required environment variables:', missingEnvVars);
+  process.exit(1);
+}
+
 console.log('Initializing server...');
 try {
+  console.log('Attempting to connect to MongoDB...');
   await connectDB();
   console.log('MongoDB connected successfully');
+  
+  console.log('Attempting to connect to Cloudinary...');
   await connectCloudinary();
   console.log('Cloudinary connected successfully');
 } catch (error) {
   console.error('Error during initialization:', error);
+  // In development, exit on initialization error
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(1);
+  }
 }
 // middlewares
 
@@ -63,11 +80,37 @@ app.get("/", (req, res) => {
 
 // Error handling
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error('Error occurred:', {
+    path: req.path,
+    method: req.method,
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      errors: Object.values(err.errors).map(e => e.message)
+    });
+  }
+
+  if (err.name === 'MongoError' || err.name === 'MongoServerError') {
+    return res.status(500).json({
+      success: false,
+      message: 'Database Error',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error'
+    });
+  }
+
   res.status(500).json({
     success: false,
     message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err : {}
+    error: process.env.NODE_ENV === 'development' ? {
+      message: err.message,
+      stack: err.stack
+    } : {}
   });
 });
 
