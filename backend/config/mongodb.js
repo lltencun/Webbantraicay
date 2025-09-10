@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
 const connectDB = async () => {
   try {
+    // Log environment check
+    console.log('Node ENV:', process.env.NODE_ENV);
+    
+    // Check if MONGODB_URI exists
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in environment variables');
+    }
+    
     // Log the MongoDB URI (without sensitive data) for debugging
-    const sanitizedUri = process.env.MONGODB_URI ? 
-      process.env.MONGODB_URI.replace(/\/\/[^@]+@/, '//****:****@') : 
-      'undefined';
+    const sanitizedUri = process.env.MONGODB_URI.replace(/\/\/[^@]+@/, '//****:****@');
     console.log('Attempting to connect to MongoDB with URI:', sanitizedUri);
 
     // Set up connection listeners
