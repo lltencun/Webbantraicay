@@ -33,14 +33,15 @@ const connectDB = async () => {
     });
 
     const connect = async (retries = 5, delay = 5000) => {
+      console.log(`Attempting to connect to MongoDB (${retries} retries left)...`);
       try {
         await mongoose.connect(process.env.MONGODB_URI, {
-          serverSelectionTimeoutMS: 15000,
-          socketTimeoutMS: 45000,
+          serverSelectionTimeoutMS: 30000,
+          socketTimeoutMS: 60000,
           maxPoolSize: 10,
           retryWrites: true,
           w: 'majority',
-          connectTimeoutMS: 10000,
+          connectTimeoutMS: 30000,
           serverApi: {
             version: '1',
             strict: true,
