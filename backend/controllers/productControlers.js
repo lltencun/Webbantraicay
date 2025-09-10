@@ -105,9 +105,13 @@ export const listProducts = async (req, res) => {
       console.error("MongoDB not connected. Current state:", mongoose.connection.readyState);
       return res.status(500).json({ 
         success: false, 
-        message: "Database connection not ready" 
+        message: "Database connection not ready",
+        state: mongoose.connection.readyState 
       });
     }
+    
+    // Add debug logging
+    console.log("MongoDB connected, attempting to fetch products...");
     // Get products with populated origin and product type information
     const products = await productModel.find()
       .sort({ date: -1 })      .populate({

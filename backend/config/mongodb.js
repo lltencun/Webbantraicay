@@ -26,22 +26,46 @@ const connectDB = async () => {
 
     mongoose.connection.on("error", (err) => {
       console.error("MongoDB Connection Error:", err);
+      // Attempt to reconnect on error
+      setTimeout(() => {
+        connect(5, 5000);
+      }, 5000);
     });
 
     mongoose.connection.on("disconnected", () => {
       console.log("MongoDB Connection Disconnected");
+      // Attempt to reconnect on disconnection
+      setTimeout(() => {
+        connect(5, 5000);
+      }, 5000);
+    });
+
+    // Handle process termination
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      console.log('MongoDB connection closed through app termination');
+      process.exit(0);
     });
 
     const connect = async (retries = 5, delay = 5000) => {
       console.log(`Attempting to connect to MongoDB (${retries} retries left)...`);
       try {
+        // Close any existing connections
+        if (mongoose.connection.readyState !== 0) {
+          await mongoose.connection.close();
+        }
+
         await mongoose.connect(process.env.MONGODB_URI, {
           serverSelectionTimeoutMS: 30000,
           socketTimeoutMS: 60000,
           maxPoolSize: 10,
+          minPoolSize: 5,
           retryWrites: true,
           w: 'majority',
           connectTimeoutMS: 30000,
+          keepAlive: true,
+          keepAliveInitialDelay: 300000,
+          autoIndex: true,
           serverApi: {
             version: '1',
             strict: true,
