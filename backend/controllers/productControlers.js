@@ -319,11 +319,59 @@ export const updateProduct = async (req, res) => {
 //function for single product info
 export const singleProduct = async (req, res) => {
   try {
-    const { productId } = req.body;
-    const product = await productModel.findById(productId);
+    // Get productId from either params (GET /:id) or body (POST /single)
+    const productId = req.params.id || req.body.productId;
+    
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required"
+      });
+    }
 
-    res.json({ success: true, product });
+    const product = await productModel.findById(productId)
+      .populate({
+        path: 'origin_id',
+        select: 'country farm_name'
+      })
+      .populate({
+        path: 'product_type_id',
+        select: 'name code category type'
+      });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    // Get product details
+    const productDetail = await productDetailModel.findOne({
+      product_id: productId
+    });
+
+    const productData = {
+      ...product.toObject(),
+      sizes: productDetail?.sizes || [],
+      price: productDetail?.price || 0,
+      available: productDetail?.available || false,
+      bestseller: productDetail?.bestseller || false,
+      color: productDetail?.color,
+      nutritional_info: productDetail?.nutritional_info,
+      origin: product.origin_id,
+      product_type: product.product_type_id
+    };
+
+    res.json({ 
+      success: true, 
+      product: productData 
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error in singleProduct:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };

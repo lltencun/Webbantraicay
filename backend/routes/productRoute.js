@@ -10,6 +10,8 @@ import upload from "../middleware/multer.js";
 import { adminAuth } from "../middleware/adminAuth.js";
 
 const productRouter = express.Router();
+// Public route to get all products
+productRouter.get("/", listProducts);
 productRouter.get("/list", listProducts);
 
 productRouter.post(
@@ -24,8 +26,9 @@ productRouter.post(
   addProduct
 );
 productRouter.post("/remove", adminAuth, removeProduct);
-productRouter.post("/single", singleProduct);
-productRouter.get("/list", adminAuth, listProducts);
+productRouter.get("/:id", singleProduct);
+productRouter.post("/single", singleProduct); // Keeping for backward compatibility
+productRouter.get("/admin/list", adminAuth, listProducts);
 productRouter.post(
   "/update",
   adminAuth,
