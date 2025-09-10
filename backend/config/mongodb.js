@@ -35,12 +35,19 @@ const connectDB = async () => {
     const connect = async (retries = 5, delay = 5000) => {
       try {
         await mongoose.connect(process.env.MONGODB_URI, {
-          serverSelectionTimeoutMS: 15000, // Increased timeout
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+          serverSelectionTimeoutMS: 15000,
           socketTimeoutMS: 45000,
           maxPoolSize: 10,
           retryWrites: true,
           w: 'majority',
           connectTimeoutMS: 10000,
+          serverApi: {
+            version: '1',
+            strict: true,
+            deprecationErrors: true
+          }
         });
         console.log("MongoDB Connected Successfully");
         return true;
